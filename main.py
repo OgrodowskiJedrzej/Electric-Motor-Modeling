@@ -7,7 +7,7 @@ import webbrowser
 import numpy as np
 
 
-### Defined Parameters
+# Defined Parameters
 
 # Parameters of simulation
 referencedRevolutionsPerMinute = 3000
@@ -42,7 +42,9 @@ revolutionsList = [0]
 previousrevolutionsList = [0]
 previoustimeOfSimulationList = [0]
 
-### Calculations
+# Calculations
+
+
 def calculateNumberOfIterations(timeOfSimulation: int, timeOfSample: float) -> int:
     """ Calculates number of iterations for simulation of process
 
@@ -54,6 +56,8 @@ def calculateNumberOfIterations(timeOfSimulation: int, timeOfSample: float) -> i
         - int: number of iterations
     """
     return int(timeOfSimulation / timeOfSample) + 1
+
+
 def calculateAdjustmentError(referencedRevolutionsPerMinute: float, currentRevolutionsPerMinute: float) -> float:
     """ Calculates adjustment error which is difference between referenced value and current one
 
@@ -65,6 +69,7 @@ def calculateAdjustmentError(referencedRevolutionsPerMinute: float, currentRevol
         - float: error
     """
     return referencedRevolutionsPerMinute - currentRevolutionsPerMinute
+
 
 def calculateVoltageOfRegulator(errorList: list[float], iteration: int) -> float:
     """ Calculates current voltage of regulator using PID control.
@@ -82,10 +87,11 @@ def calculateVoltageOfRegulator(errorList: list[float], iteration: int) -> float
     integral = Ki * sum(errorList) * timeOfSample
 
     # Deriative part can be done from second iteration
-    if iteration > 0:  
-        derivative = (errorList[iteration] - errorList[iteration - 1]) / timeOfSample
+    if iteration > 0:
+        derivative = (errorList[iteration] -
+                      errorList[iteration - 1]) / timeOfSample
     else:
-        derivative = 0.0 
+        derivative = 0.0
 
     derivative = Kd * derivative
 
@@ -93,7 +99,8 @@ def calculateVoltageOfRegulator(errorList: list[float], iteration: int) -> float
 
     return voltage
 
-def calculateElectromagneticMoment(constant : float, currentVoltage : float) -> float:
+
+def calculateElectromagneticMoment(constant: float, currentVoltage: float) -> float:
     """ Calculates current electromagnetic moment based on voltage of regulator
 
         @Parameters:
@@ -105,7 +112,8 @@ def calculateElectromagneticMoment(constant : float, currentVoltage : float) -> 
     """
     return constant * currentVoltage
 
-def calculateNormalizedVoltage(voltgeOfRegulator : float) -> float:
+
+def calculateNormalizedVoltage(voltgeOfRegulator: float) -> float:
     """ Calculates normalized voltage based on predefined constraints <Umin;Umax> [V]
 
     @Parameters:
@@ -116,13 +124,16 @@ def calculateNormalizedVoltage(voltgeOfRegulator : float) -> float:
     """
     return max(Umin, min(Umax, voltgeOfRegulator))
 
-def convertToAngularVelocity(valueToBeConverted : float) -> float:
+
+def convertToAngularVelocity(valueToBeConverted: float) -> float:
     return valueToBeConverted * (2 * np.pi / 60)
 
-def convertToRevolutionsPerMinute(valueToBeConverted : float) -> float:
+
+def convertToRevolutionsPerMinute(valueToBeConverted: float) -> float:
     return valueToBeConverted * (60 / (2 * np.pi))
 
-def calculateRevolutions(latestRevolution : float, latestElectromagneticMoment : float) -> float:
+
+def calculateRevolutions(latestRevolution: float, latestElectromagneticMoment: float) -> float:
     """ Calculates the updated revolutions per minute (RPM) based on the system's moments.
 
         @Parameters:
@@ -139,7 +150,8 @@ def calculateRevolutions(latestRevolution : float, latestElectromagneticMoment :
 
     return convertToRevolutionsPerMinute(newOmega)
 
-### Visualizations
+
+# Visualizations
 app = dash.Dash(__name__)
 
 app.layout = html.Div([
@@ -151,7 +163,7 @@ app.layout = html.Div([
         ),
         html.Label("Referenced RPMs"),
         dcc.Slider(
-            id='slider-referencedRevolutionsPerMinute', min=1000, max=5000,step=1000,value=3000,
+            id='slider-referencedRevolutionsPerMinute', min=1000, max=5000, step=1000, value=3000,
             marks={i: str(i*1000) for i in range(1, 6)}
         ),
         html.Label("Kp"),
@@ -197,7 +209,6 @@ app.layout = html.Div([
         Input('slider-Kd', 'value'),
     ]
 )
-
 def updateGraphs(newLoadMoment, newReferencedRPM, newKp, newKi, newKd):
     # Update global parameters
     global loadMoment, referencedRevolutionsPerMinute, Kp, Ki, Kd
@@ -209,7 +220,7 @@ def updateGraphs(newLoadMoment, newReferencedRPM, newKp, newKi, newKd):
 
     # Reinitialize global lists
     global timeOfSimulationList, loadMomentList, electromagneticMomentList
-    global adjustmentErrors, voltagesList, revolutionsList, brakingMomentList,previousrevolutionsList,previoustimeOfSimulationList
+    global adjustmentErrors, voltagesList, revolutionsList, brakingMomentList, previousrevolutionsList, previoustimeOfSimulationList
     timeOfSimulationList = [0.0]
     loadMomentList = [0.0]
     electromagneticMomentList = [0.0]
@@ -271,7 +282,8 @@ def updateGraphs(newLoadMoment, newReferencedRPM, newKp, newKi, newKd):
     ))
 
     momentsFigure.update_layout(
-        title=f"Load, Electromagnetic, and Braking Moment ({brakingMoment}) Over Time",
+        title=f"Load, Electromagnetic, and Braking Moment ({
+            brakingMoment}) Over Time",
         xaxis_title="Time (s)",
         yaxis_title="Moment (Nm)"
     )
@@ -285,17 +297,17 @@ def updateGraphs(newLoadMoment, newReferencedRPM, newKp, newKi, newKd):
         mode='lines',
         name='Revolutions'
     ))
-    
+
     revolutionsFigure.add_trace(go.Scatter(
         x=previoustimeOfSimulationList,
         y=previousrevolutionsList,
         mode='lines',
         name='previousRevolutions',
-        line=dict(color='gray',dash="dash")
+        line=dict(color='gray', dash="dash")
     ))
 
     revolutionsFigure.add_hline(y=referencedRevolutionsPerMinute, line_dash="dot",
-                              annotation_text="Target RPM")
+                                annotation_text="Target RPM")
     revolutionsFigure.update_layout(
         title="Revolutions Over Time",
         xaxis_title="Time (s)",
@@ -310,6 +322,7 @@ def updateGraphs(newLoadMoment, newReferencedRPM, newKp, newKi, newKd):
 def openBrowser():
     """Open the web browser to the Dash app"""
     webbrowser.open("http://127.0.0.1:8050")
+
 
 if __name__ == '__main__':
     threading.Thread(target=lambda: app.run_server(
